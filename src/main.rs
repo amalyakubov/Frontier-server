@@ -1,7 +1,4 @@
-use std::f32::consts::E;
-
 use axum::{routing::get, Json, Router};
-use hyper::header::USER_AGENT;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 use sqlx::{
@@ -74,15 +71,17 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .route("/anthropic", get(call_anthropic))
-        .route("/db", get(connectToDb));
+        .route("/db", get(connect_to_db));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap()
 }
 
-async fn connectToDb() -> Result<Json<Vec<User>>, (axum::http::StatusCode, String)> {
+async fn connect_to_db() -> Result<Json<Vec<User>>, (axum::http::StatusCode, String)> {
     // Add proper error handling instead of using expect()
-    let pool = PgPool::connect("postgres.railway.internal")
+    let db_url = std::env::var("DB")
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    let pool = PgPool::connect(&db_url)
         .await
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
