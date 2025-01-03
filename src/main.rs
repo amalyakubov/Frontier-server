@@ -79,9 +79,8 @@ async fn main() {
 
 async fn connect_to_db() -> Result<Json<Vec<User>>, (axum::http::StatusCode, String)> {
     // Add proper error handling instead of using expect()
-    let db_url = std::env::var("DB")
-        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    let pool = PgPool::connect(&db_url)
+    let DB = std::env::var("DB");
+    let pool = PgPool::connect(&DB.unwrap())
         .await
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
