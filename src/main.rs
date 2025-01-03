@@ -6,6 +6,7 @@ use axum::{
 use serde::{Serialize, Deserialize};
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 
+#[derive(Serialize, Deserialize, Debug)]
 enum Author {
     Model,
     User,
