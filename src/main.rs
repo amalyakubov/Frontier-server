@@ -14,7 +14,7 @@ enum Author {
 #[derive(Serialize, Deserialize, Debug)]
 struct ChatMessage {
     author: Author,
-    content: string,
+    content: String,
 }
 
 
