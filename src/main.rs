@@ -6,12 +6,17 @@ use axum::{
 use serde::{Serialize, Deserialize};
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 
-#[derive(Serialize, Deserialize, Debug)]
-struct MyData {
-    name: String,
-    age: u32,
-    active: bool
+enum Author {
+    Model,
+    User,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ChatMessage {
+    author: Author,
+    content: string,
+}
+
 
 #[derive(Serialize, Deserialize, Debug)]
 struct AnthropicRequest {
