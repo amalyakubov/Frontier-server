@@ -93,10 +93,10 @@ async fn connect_to_db() -> Result<Json<Vec<User>>, (axum::http::StatusCode, Str
     .execute(&pool)
     .await;
 
-    let user = sqlx::query("INSERT INTO user (id) VALUES (1)")
+    let user = sqlx::query("INSERT INTO users (id) VALUES (1)")
         .execute(&pool)
         .await;
-    let users: Vec<User> = sqlx::query_as("SELECT * FROM user")
+    let users: Vec<User> = sqlx::query_as("SELECT * FROM users")
         .fetch_all(&pool)
         .await
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
