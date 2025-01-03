@@ -62,7 +62,6 @@ async fn make_anthropic_request() -> Result<String, Box<dyn std::error::Error>> 
 async fn main() {
     let app = Router::new()
         .route("/", get(root))
-        .route("/data", get(return_json_object))
         .route("/anthropic", get(call_anthropic));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -71,15 +70,6 @@ async fn main() {
 
 async fn root() -> String {
     "!".to_string()
-}
-
-async fn return_json_object() -> Json<MyData> {
-    let data = MyData {
-        name: "Jane Doe".to_string(),
-        age: 25, 
-        active: false,
-    };
-    Json(data)
 }
 
 async fn call_anthropic() -> String {
