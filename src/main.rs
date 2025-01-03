@@ -1,10 +1,13 @@
-use axum::{
-    Router, 
-    routing::get,
-    Json
-};
-use serde::{Serialize, Deserialize};
+use std::f32::consts::E;
+
+use axum::{routing::get, Json, Router};
+use hyper::header::USER_AGENT;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
+use serde::{Deserialize, Serialize};
+use sqlx::{
+    postgres::{PgPool, PgRow},
+    prelude::FromRow,
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 enum Author {
@@ -12,12 +15,16 @@ enum Author {
     User,
 }
 
+#[derive(FromRow, Serialize, Deserialize, Debug)]
+struct User {
+    id: i32,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 struct ChatMessage {
     author: Author,
     content: String,
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 struct AnthropicRequest {
@@ -34,9 +41,12 @@ struct Message {
 
 async fn make_anthropic_request() -> Result<String, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
-    
+
     let mut headers = HeaderMap::new();
-    headers.insert("x-api-key", HeaderValue::from_str(&std::env::var("ANTHROPIC_API_KEY")?)?);
+    headers.insert(
+        "x-api-key",
+        HeaderValue::from_str(&std::env::var("ANTHROPIC_API_KEY")?)?,
+    );
     headers.insert("anthropic-version", HeaderValue::from_static("2023-06-01"));
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
@@ -63,10 +73,37 @@ async fn make_anthropic_request() -> Result<String, Box<dyn std::error::Error>> 
 async fn main() {
     let app = Router::new()
         .route("/", get(root))
-        .route("/anthropic", get(call_anthropic));
+        .route("/anthropic", get(call_anthropic))
+        .route("/db", get(connectToDb));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap()
+}
+
+async fn connectToDb() -> Result<Json<Vec<User>>, (axum::http::StatusCode, String)> {
+    // Add proper error handling instead of using expect()
+    let pool = PgPool::connect("postgres.railway.internal")
+        .await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let table = sqlx::query(
+        "
+   CREATE TABLE IF NOT EXISTS user (
+        id SERIAL PRIMARY KEY AUTOINCREMENT,
+   ",
+    )
+    .execute(&pool)
+    .await;
+
+    let user = sqlx::query("INSERT INTO user (id) VALUES (1)")
+        .execute(&pool)
+        .await;
+    let users: Vec<User> = sqlx::query_as("SELECT * FROM user")
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+
+    Ok(Json(users))
 }
 
 async fn root() -> String {
