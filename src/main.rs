@@ -87,7 +87,7 @@ async fn connect_to_db() -> Result<Json<Vec<User>>, (axum::http::StatusCode, Str
     let table = sqlx::query(
         "
    CREATE TABLE IF NOT EXISTS user (
-        id SERIAL PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
    ",
     )
     .execute(&pool)
@@ -99,7 +99,7 @@ async fn connect_to_db() -> Result<Json<Vec<User>>, (axum::http::StatusCode, Str
     let users: Vec<User> = sqlx::query_as("SELECT * FROM user")
         .fetch_all(&pool)
         .await
-        .unwrap();
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     Ok(Json(users))
 }
