@@ -86,9 +86,9 @@ async fn connect_to_db() -> Result<Json<Vec<User>>, (axum::http::StatusCode, Str
 
     let table = sqlx::query(
         "
-   CREATE TABLE IF NOT EXISTS user (
-        id SERIAL PRIMARY KEY,
-   ",
+   CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY
+    )",
     )
     .execute(&pool)
     .await;
